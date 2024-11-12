@@ -42,6 +42,10 @@ struct CellList {
 struct Queue {
     // Cell object array with max size
     // Two int objects for head and tail
+    Cell* objects;
+    int head;
+    int tail;
+    int max_size;
 };
 
 struct Maze {
@@ -55,11 +59,13 @@ struct Maze {
 
 // Queue functions
 void initQueue(Queue *q) { //initalize empty queue
-    
+    while (q != NULL)
+        q++;
+        printf("%i %i %i ", (*q).head, (*q).tail, (*q).max_size);
 }
 
 bool isQEmpty(Queue q) {
-    
+    return q.head == q.tail;
 }
 
 

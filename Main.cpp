@@ -4,6 +4,7 @@
 #define MAX_QUEUE_SIZE 100
 #define NULL_CELL {{-1, -1}, -1, -1}
 
+const int GOAL_COORDS[4][2] = {{3, 3}, {3, 4}, {4, 3}, {4, 4}};
 // direction
 const char dir_chars[4] = {'n', 'e', 's', 'w'};
 
@@ -30,6 +31,10 @@ struct Coord {
     int y;
 };
 
+bool operator == (Coord c1, Coord c2){
+    return c1.x == c2.x && c1.y == c2.y;
+}
+
 struct Cell {
     Coord pos;
     int distance;
@@ -37,7 +42,7 @@ struct Cell {
 };
 
 bool operator == (Cell c1, Cell c2){
-    return c1.pos.x == c2.pos.x && c1.pos.y == c2.pos.y && c1.distance == c2.distance && c1.cellWalls == c2.cellWalls;
+    return c1.pos == c2.pos && c1.distance == c2.distance && c1.cellWalls == c2.cellWalls;
 } 
 
 struct CellList {

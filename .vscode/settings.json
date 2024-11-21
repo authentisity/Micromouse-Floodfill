@@ -59,6 +59,7 @@
     "chrono": "cpp",
     "forward_list": "cpp",
     "iomanip": "cpp",
-    "sstream": "cpp"
+    "sstream": "cpp",
+    "stdbool.h": "c"
   }
 }

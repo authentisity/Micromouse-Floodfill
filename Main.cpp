@@ -23,7 +23,7 @@ enum Direction {
     EAST = 1,
     SOUTH = 2,
     WEST = 3,
-    NONE = 9
+    NONE = 5
 };
 
 static const enum Direction direction_index[] = { NORTH, EAST, SOUTH, WEST };
@@ -148,6 +148,7 @@ void updateSimulator(Maze maze) { // redraws the maze in simulator after each lo
     {
         for(int y = 0; y < MAZE_SIZE; y++) 
         {
+            API::setText(x, y, std::string(1, (char)(maze.cells[x][y].cellWalls + '0')));
             if (maze.cells[x][y].cellWalls & NORTH_MASK)
                 API::setWall(x, y, 'n');
             else
@@ -232,7 +233,7 @@ CellList* getNeighborCells(Maze* maze, Coord c) { //to be called in a while loop
     return cellList;
 };
 
-void floodFill(Maze* maze, Queue* q, bool to_start) { // function to be called everytime you move into a new cell
+Direction floodFill(Maze* maze, Queue* q, bool to_start) { // function to be called everytime you move into a new cell
     enqueue(q, maze->cells[maze->mouse_pos.x][maze->mouse_pos.y]);
     maze->cells[maze->mouse_pos.x][maze->mouse_pos.y].discovered = true;
     Cell path_node = NULL_CELL; 
@@ -266,7 +267,7 @@ void floodFill(Maze* maze, Queue* q, bool to_start) { // function to be called e
         for(int y = 0; y < MAZE_SIZE; y++) 
         {
             API::setColor(x, y, 'k');
-            API::setText(x, y, std::string(1, (char)(maze->cells[x][y].direction + '0')));
+            //API::setText(x, y, std::string(1, (char)(maze->cells[x][y].cellWalls + '0')));
         }
     }
 
@@ -291,6 +292,7 @@ void floodFill(Maze* maze, Queue* q, bool to_start) { // function to be called e
     // }
     resetMazeDiscovered(maze);
     initQueue(q);
+    return path_node.direction;
 }
 
 int main(){
@@ -315,4 +317,17 @@ int main(){
         API::moveForward();
         updateMousePos(maze);
     }
+
+    // while (true) {
+    //     scanWalls(maze);
+    //     updateSimulator(*maze);
+    //     Direction dir = floodFill(maze, q, false);
+    //     API::setText(10, 10, std::string(1, (char)(dir + '0')));
+    //     while (maze->mouse_dir != (dir + 2 % 4)){
+    //         API::turnRight();
+    //         updateMouseDir(maze, direction_index[maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1]);
+    //     }
+    //     API::moveForward();
+    //     updateMousePos(maze);
+    // }
 }

@@ -128,6 +128,13 @@ Cell dequeue(Queue* q)
     return q->objects[q->tail++];
 }
 
+// Direction getRelativeDir(Direction cell_dir, char ) {
+    
+// }
+// Cell getNextCell(Cell cell, Direction dir) {
+//     if dir = 
+// }
+
 // Maze functions
 void scanWalls(Maze* maze) { // fill in code for changing value of the cell walls
     if (API::wallFront()) {
@@ -146,25 +153,17 @@ void scanWalls(Maze* maze) { // fill in code for changing value of the cell wall
 void updateSimulator(Maze maze) { // redraws the maze in simulator after each loop in main
     for(int x = 0; x < MAZE_SIZE; x++) 
     {
-        for(int y = 0; y < MAZE_SIZE; y++) 
+        for(int y = 0; y < MAZE_SIZE; y++)
         {
             API::setText(x, y, std::string(1, (char)(maze.cells[x][y].cellWalls + '0')));
             if (maze.cells[x][y].cellWalls & NORTH_MASK)
                 API::setWall(x, y, 'n');
-            else
-                API::clearWall(x, y, 'n');
             if (maze.cells[x][y].cellWalls & EAST_MASK)
                 API::setWall(x, y, 'e');
-            else
-                API::clearWall(x, y, 'e');
             if (maze.cells[x][y].cellWalls & SOUTH_MASK)
                 API::setWall(x, y, 's');
-            else
-                API::clearWall(x, y, 's');
             if (maze.cells[x][y].cellWalls & WEST_MASK)
                 API::setWall(x, y, 'w');
-            else
-                API::clearWall(x, y, 'w');
         }
     }
 }
@@ -194,7 +193,7 @@ CellList* getNeighborCells(Maze* maze, Coord c) { //to be called in a while loop
     CellList* cellList = (CellList*)malloc(sizeof(CellList));
     cellList->size = 0;
     cellList->cells = (Cell*)malloc(sizeof(Cell) * 4);
-    if (c.x < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & EAST_MASK) == 0b0000 && !maze->cells[c.x + 1][c.y].discovered){
+    if (c.x < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & EAST_MASK) == 0 && (maze->cells[c.x + 1][c.y].cellWalls & WEST_MASK) == 0 && !maze->cells[c.x + 1][c.y].discovered){
         maze->cells[c.x + 1][c.y].discovered = true;
         maze->cells[c.x + 1][c.y].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x + 1][c.y].direction = WEST;
@@ -203,7 +202,7 @@ CellList* getNeighborCells(Maze* maze, Coord c) { //to be called in a while loop
     }
     // else
     //     API::setColor(c.x + 1, c.y, 'k');
-    if (c.x > 0 && (maze->cells[c.x][c.y].cellWalls & WEST_MASK) == 0b0000 && !maze->cells[c.x - 1][c.y].discovered){
+    if (c.x > 0 && (maze->cells[c.x][c.y].cellWalls & WEST_MASK) == 0 && (maze->cells[c.x - 1][c.y].cellWalls & EAST_MASK) == 0 && !maze->cells[c.x - 1][c.y].discovered){
         maze->cells[c.x - 1][c.y].discovered = true;
         maze->cells[c.x - 1][c.y].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x - 1][c.y].direction = EAST;
@@ -212,7 +211,7 @@ CellList* getNeighborCells(Maze* maze, Coord c) { //to be called in a while loop
     }
     // else
     //     API::setColor(c.x - 1, c.y, 'k');
-    if (c.y < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & NORTH_MASK) == 0b0000 && !maze->cells[c.x][c.y + 1].discovered){
+    if (c.y < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & NORTH_MASK) == 0 && (maze->cells[c.x][c.y + 1].cellWalls & SOUTH_MASK) == 0 && !maze->cells[c.x][c.y + 1].discovered){
         maze->cells[c.x][c.y + 1].discovered = true;
         maze->cells[c.x][c.y + 1].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x][c.y + 1].direction = SOUTH;
@@ -221,7 +220,7 @@ CellList* getNeighborCells(Maze* maze, Coord c) { //to be called in a while loop
     }
     // else
     //     API::setColor(c.x, c.y + 1, 'k');
-    if (c.y > 0 && (maze->cells[c.x][c.y].cellWalls & SOUTH_MASK) == 0b0000 && !maze->cells[c.x][c.y - 1].discovered){
+    if (c.y > 0 && (maze->cells[c.x][c.y].cellWalls & SOUTH_MASK) == 0 && (maze->cells[c.x][c.y - 1].cellWalls & NORTH_MASK) == 0 && !maze->cells[c.x][c.y - 1].discovered){
         maze->cells[c.x][c.y - 1].discovered = true;
         maze->cells[c.x][c.y - 1].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x][c.y - 1].direction = NORTH;
@@ -271,9 +270,11 @@ Direction floodFill(Maze* maze, Queue* q, bool to_start) { // function to be cal
         }
     }
 
+    Cell next_cell = path_node;
     while(!(path_node.pos == maze->mouse_pos)){
     //     API::setText(
     // std::string{static_cast<char>(path_node.pos.x + '0'), ',', static_cast<char>(path_node.pos.y + '0'), '-', static_cast<char>(maze->mouse_pos.x + '0'), ',', static_cast<char>(maze->mouse_pos.y + '0')});
+        next_cell = path_node;
         API::setColor(path_node.pos.x, path_node.pos.y, 'g');
         if (path_node.direction == NORTH)
             path_node = maze->cells[path_node.pos.x][path_node.pos.y + 1];
@@ -292,7 +293,7 @@ Direction floodFill(Maze* maze, Queue* q, bool to_start) { // function to be cal
     // }
     resetMazeDiscovered(maze);
     initQueue(q);
-    return path_node.direction;
+    return next_cell.direction;
 }
 
 int main(){
@@ -322,8 +323,8 @@ int main(){
     //     scanWalls(maze);
     //     updateSimulator(*maze);
     //     Direction dir = floodFill(maze, q, false);
-    //     API::setText(10, 10, std::string(1, (char)(dir + '0')));
-    //     while (maze->mouse_dir != (dir + 2 % 4)){
+    //     while (maze->mouse_dir != direction_index[dir + 2 % 4]){
+    //         API::setText(10, 10, std::string({static_cast<char>(dir + '0'), ',', static_cast<char>( + '0')}));
     //         API::turnRight();
     //         updateMouseDir(maze, direction_index[maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1]);
     //     }

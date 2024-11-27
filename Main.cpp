@@ -302,33 +302,33 @@ int main(){
     initQueue(q);
     initMaze(maze);
 
-    while (true) {
-        scanWalls(maze);
-        updateSimulator(*maze);
-        floodFill(maze, q, false);
-        if (!API::wallLeft()) {
-            API::turnLeft();
-            updateMouseDir(maze, direction_index[maze->mouse_dir - 1 < 0 ? 3 : maze->mouse_dir - 1]);
-            
-        }
-        while (API::wallFront()) {
-            API::turnRight();
-            updateMouseDir(maze, direction_index[maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1]);
-        }
-        API::moveForward();
-        updateMousePos(maze);
-    }
-
     // while (true) {
     //     scanWalls(maze);
     //     updateSimulator(*maze);
-    //     Direction dir = floodFill(maze, q, false);
-    //     while (maze->mouse_dir != direction_index[dir + 2 % 4]){
-    //         API::setText(10, 10, std::string({static_cast<char>(dir + '0'), ',', static_cast<char>( + '0')}));
+    //     floodFill(maze, q, false);
+    //     if (!API::wallLeft()) {
+    //         API::turnLeft();
+    //         updateMouseDir(maze, direction_index[maze->mouse_dir - 1 < 0 ? 3 : maze->mouse_dir - 1]);
+            
+    //     }
+    //     while (API::wallFront()) {
     //         API::turnRight();
     //         updateMouseDir(maze, direction_index[maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1]);
     //     }
     //     API::moveForward();
     //     updateMousePos(maze);
     // }
+
+    while (true) {
+        scanWalls(maze);
+        updateSimulator(*maze);
+        Direction dir = floodFill(maze, q, false);
+        while (maze->mouse_dir != direction_index[(dir + 2) % 4]){
+            API::setText(10, 10, std::string({static_cast<char>(direction_index[(dir + 2) % 4] + '0'), ',', static_cast<char>(maze->mouse_dir + '0')}));
+            API::turnRight();
+            updateMouseDir(maze, direction_index[maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1]);
+        }
+        API::moveForward();
+        updateMousePos(maze);
+    }
 }

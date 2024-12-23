@@ -130,7 +130,6 @@ Cell dequeue(Queue* q)
 void scanWalls(Maze* maze) { // fill in code for changing value of the cell walls
     if (API::wallFront()) {
         maze->cells[maze->mouse_pos.x][maze->mouse_pos.y].cellWalls |= direction_mask[maze->mouse_dir];
-        if maze->mouse_pos.x + 1 < MAZE_SIZE
     }
     if (API::wallRight()) {
         int direction_index = maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1;

@@ -56,10 +56,6 @@ struct Cell {
     bool discovered;
 };
 
-bool operator == (Cell c1, Cell c2){
-    return c1.pos == c2.pos && c1.cellWalls == c2.cellWalls;
-}
-
 struct CellList {
     int size;
     Cell* cells;
@@ -127,17 +123,41 @@ Cell dequeue(Queue* q)
 }
 
 // Maze functions
-void scanWalls(Maze* maze) { // fill in code for changing value of the cell walls
+void scanWalls(Maze* maze) {
     if (API::wallFront()) {
         maze->cells[maze->mouse_pos.x][maze->mouse_pos.y].cellWalls |= direction_mask[maze->mouse_dir];
+        if (maze->mouse_dir == 0 && maze->mouse_pos.y + 1 < MAZE_SIZE)
+            maze->cells[maze->mouse_pos.x][maze->mouse_pos.y + 1].cellWalls |= SOUTH_MASK;
+        if (maze->mouse_dir == 1 && maze->mouse_pos.x + 1 < MAZE_SIZE)
+            maze->cells[maze->mouse_pos.x + 1][maze->mouse_pos.y].cellWalls |= WEST_MASK;
+        if (maze->mouse_dir == 2 && maze->mouse_pos.y - 1 > 0)
+            maze->cells[maze->mouse_pos.x][maze->mouse_pos.y - 1].cellWalls |= NORTH_MASK;
+        if (maze->mouse_dir == 3 && maze->mouse_pos.x - 1 > 0)
+            maze->cells[maze->mouse_pos.x - 1][maze->mouse_pos.y].cellWalls |= EAST_MASK;
     }
     if (API::wallRight()) {
         int direction_index = maze->mouse_dir + 1 > 3 ? 0 : maze->mouse_dir + 1;
         maze->cells[maze->mouse_pos.x][maze->mouse_pos.y].cellWalls |= direction_mask[direction_index];
+        if (maze->mouse_dir == 0 && maze->mouse_pos.x + 1 < MAZE_SIZE)
+            maze->cells[maze->mouse_pos.x + 1][maze->mouse_pos.y].cellWalls |= WEST_MASK;
+        if (maze->mouse_dir == 1 && maze->mouse_pos.y - 1 > 0)
+            maze->cells[maze->mouse_pos.x][maze->mouse_pos.y - 1].cellWalls |= NORTH_MASK;
+        if (maze->mouse_dir == 2 && maze->mouse_pos.x - 1 > 0)
+            maze->cells[maze->mouse_pos.x - 1][maze->mouse_pos.y].cellWalls |= EAST_MASK;
+        if (maze->mouse_dir == 3 && maze->mouse_pos.y + 1 < MAZE_SIZE)
+            maze->cells[maze->mouse_pos.x][maze->mouse_pos.y + 1].cellWalls |= SOUTH_MASK;
     }
     if (API::wallLeft()) {
         int direction_index = maze->mouse_dir - 1 < 0 ? 3 : maze->mouse_dir - 1;
         maze->cells[maze->mouse_pos.x][maze->mouse_pos.y].cellWalls |= direction_mask[direction_index];
+        if (maze->mouse_dir == 0 && maze->mouse_pos.x - 1 > 0)
+            maze->cells[maze->mouse_pos.x - 1][maze->mouse_pos.y].cellWalls |= EAST_MASK;
+        if (maze->mouse_dir == 1 && maze->mouse_pos.y + 1 < MAZE_SIZE)
+            maze->cells[maze->mouse_pos.x][maze->mouse_pos.y + 1].cellWalls |= SOUTH_MASK;
+        if (maze->mouse_dir == 2 && maze->mouse_pos.x + 1 < MAZE_SIZE)
+            maze->cells[maze->mouse_pos.x + 1][maze->mouse_pos.y].cellWalls |= WEST_MASK;
+        if (maze->mouse_dir == 3 && maze->mouse_pos.y - 1 > 0)
+            maze->cells[maze->mouse_pos.x][maze->mouse_pos.y - 1].cellWalls |= NORTH_MASK;
     }
 }
 
@@ -146,6 +166,7 @@ void updateSimulator(Maze maze) { // redraws the maze in simulator after each lo
     {
         for(int y = 0; y < MAZE_SIZE; y++)
         {
+            // label each cell with cellWall value
             // API::setText(x, y, std::string(1, (char)(maze.cells[x][y].cellWalls + '0')));
             if (maze.cells[x][y].cellWalls & NORTH_MASK)
                 API::setWall(x, y, 'n');
@@ -173,29 +194,37 @@ void updateMousePos(Maze* maze) {
         maze->mouse_pos.x++;
 }
 
+bool reachedGoal(Coord mouse_pos){
+    for (int i = 0; i < GOAL_SIZE; i++){
+        if (mouse_pos == GOAL_COORDS[i])
+            return 1;
+    }
+    return 0;
+}
+
 CellList* getNeighborCells(Maze* maze, Coord c) { //to be called in a while loop within Floodfill when setting each cell
     CellList* cell_list = (CellList*)malloc(sizeof(CellList));
     cell_list->size = 0;
     cell_list->cells = (Cell*)malloc(sizeof(Cell) * 4);
-    if (c.x < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & EAST_MASK) == 0 && (maze->cells[c.x + 1][c.y].cellWalls & WEST_MASK) == 0 && !maze->cells[c.x + 1][c.y].discovered){
+    if (c.x < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & EAST_MASK) == 0 && !maze->cells[c.x + 1][c.y].discovered){
         maze->cells[c.x + 1][c.y].discovered = true;
         maze->cells[c.x + 1][c.y].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x + 1][c.y].direction = WEST;
         cell_list->cells[cell_list->size++] = maze->cells[c.x + 1][c.y];
     }
-    if (c.x > 0 && (maze->cells[c.x][c.y].cellWalls & WEST_MASK) == 0 && (maze->cells[c.x - 1][c.y].cellWalls & EAST_MASK) == 0 && !maze->cells[c.x - 1][c.y].discovered){
+    if (c.x > 0 && (maze->cells[c.x][c.y].cellWalls & WEST_MASK) == 0 && !maze->cells[c.x - 1][c.y].discovered){
         maze->cells[c.x - 1][c.y].discovered = true;
         maze->cells[c.x - 1][c.y].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x - 1][c.y].direction = EAST;
         cell_list->cells[cell_list->size++] = maze->cells[c.x - 1][c.y];
     }
-    if (c.y < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & NORTH_MASK) == 0 && (maze->cells[c.x][c.y + 1].cellWalls & SOUTH_MASK) == 0 && !maze->cells[c.x][c.y + 1].discovered){
+    if (c.y < MAZE_SIZE - 1 && (maze->cells[c.x][c.y].cellWalls & NORTH_MASK) == 0 && !maze->cells[c.x][c.y + 1].discovered){
         maze->cells[c.x][c.y + 1].discovered = true;
         maze->cells[c.x][c.y + 1].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x][c.y + 1].direction = SOUTH;
         cell_list->cells[cell_list->size++] = maze->cells[c.x][c.y + 1];
     }
-    if (c.y > 0 && (maze->cells[c.x][c.y].cellWalls & SOUTH_MASK) == 0 && (maze->cells[c.x][c.y - 1].cellWalls & NORTH_MASK) == 0 && !maze->cells[c.x][c.y - 1].discovered){
+    if (c.y > 0 && (maze->cells[c.x][c.y].cellWalls & SOUTH_MASK) == 0 && !maze->cells[c.x][c.y - 1].discovered){
         maze->cells[c.x][c.y - 1].discovered = true;
         maze->cells[c.x][c.y - 1].distance = maze->cells[c.x][c.y].distance + 1;
         maze->cells[c.x][c.y - 1].direction = NORTH;
@@ -223,7 +252,6 @@ Direction floodFill(Maze* maze, Queue* q, bool to_start) { // function to be cal
     } while(!isQEmpty(q));
 
     path_found:
-
     for(int x = 0; x < MAZE_SIZE; x++) 
     {
         for(int y = 0; y < MAZE_SIZE; y++) 
@@ -272,5 +300,7 @@ int main(){
         }
         API::moveForward();
         updateMousePos(maze);
+        if(reachedGoal(maze->mouse_pos))
+            break;
     }
 }
